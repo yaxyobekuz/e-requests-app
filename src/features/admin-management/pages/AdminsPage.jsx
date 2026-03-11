@@ -1,10 +1,11 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { adminsAPI } from "@/shared/api";
-import ModalWrapper from "@/shared/components/ui/ModalWrapper";
 import { useDispatch } from "react-redux";
+import { Plus, X } from "lucide-react";
+import { adminsAPI } from "@/shared/api";
 import { open } from "@/features/modal/store/modal.slice";
-import { Plus } from "lucide-react";
+import ModalWrapper from "@/shared/components/ui/ModalWrapper";
 import Button from "@/shared/components/ui/button/Button";
 import CreateAdminForm from "../components/CreateAdminForm";
 
@@ -12,11 +13,46 @@ const REGION_TYPE_LABELS = { region: "Viloyat", district: "Tuman", neighborhood:
 
 const AdminsPage = () => {
   const dispatch = useDispatch();
+  const [filterRole, setFilterRole] = useState("");
+  const [filterRegion, setFilterRegion] = useState("");
 
-  const { data: admins = [], isLoading } = useQuery({
-    queryKey: ["admins"],
-    queryFn: () => adminsAPI.getAll().then((res) => res.data),
+  const { data: allAdmins = [], isLoading } = useQuery({
+    queryKey: ["admins", "tree"],
+    queryFn: () => adminsAPI.getTree().then((res) => res.data),
   });
+
+  const roles = useMemo(() => {
+    const seen = new Map();
+    for (const a of allAdmins) {
+      if (a.adminRole && !seen.has(a.adminRole._id)) {
+        seen.set(a.adminRole._id, a.adminRole);
+      }
+    }
+    return [...seen.values()];
+  }, [allAdmins]);
+
+  const regions = useMemo(() => {
+    const seen = new Map();
+    for (const a of allAdmins) {
+      const r = a.assignedRegion?.region;
+      if (r && !seen.has(r._id)) {
+        seen.set(r._id, r);
+      }
+    }
+    return [...seen.values()];
+  }, [allAdmins]);
+
+  const filtered = useMemo(
+    () =>
+      allAdmins.filter((a) => {
+        if (filterRole && a.adminRole?._id !== filterRole) return false;
+        if (filterRegion && a.assignedRegion?.region?._id !== filterRegion) return false;
+        return true;
+      }),
+    [allAdmins, filterRole, filterRegion],
+  );
+
+  const hasFilter = filterRole || filterRegion;
 
   return (
     <div className="p-6">
@@ -34,6 +70,49 @@ const AdminsPage = () => {
         </Button>
       </div>
 
+      {/* Filtrlar */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <select
+          value={filterRole}
+          onChange={(e) => setFilterRole(e.target.value)}
+          className="text-sm border rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Barcha lavozimlar</option>
+          {roles.map((r) => (
+            <option key={r._id} value={r._id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filterRegion}
+          onChange={(e) => setFilterRegion(e.target.value)}
+          className="text-sm border rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Barcha hududlar</option>
+          {regions.map((r) => (
+            <option key={r._id} value={r._id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+
+        {hasFilter && (
+          <button
+            onClick={() => { setFilterRole(""); setFilterRegion(""); }}
+            className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-3.5 h-3.5" />
+            Tozalash
+          </button>
+        )}
+
+        <span className="text-sm text-gray-400 ml-auto">
+          {filtered.length} ta admin
+        </span>
+      </div>
+
       <div className="bg-white rounded-xl border overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
@@ -43,12 +122,13 @@ const AdminsPage = () => {
               <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">Lavozim</th>
               <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">Telefon</th>
               <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">Hududlar</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">Tayinlovchi</th>
               <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">Holat</th>
               <th className="text-right px-4 py-3 text-sm font-medium text-gray-500"></th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {admins.map((admin) => (
+            {filtered.map((admin) => (
               <tr key={admin._id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 text-sm font-medium">{admin.alias}</td>
                 <td className="px-4 py-3 text-sm">{admin.firstName} {admin.lastName}</td>
@@ -74,6 +154,11 @@ const AdminsPage = () => {
                     <span className="text-gray-400">Belgilanmagan</span>
                   )}
                 </td>
+                <td className="px-4 py-3 text-sm text-gray-500">
+                  {admin.createdBy
+                    ? admin.createdBy.alias || admin.createdBy.firstName || "—"
+                    : <span className="text-gray-300">—</span>}
+                </td>
                 <td className="px-4 py-3 text-sm">
                   <span
                     className={`px-2 py-0.5 rounded-full text-xs ${admin.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
@@ -93,8 +178,10 @@ const AdminsPage = () => {
             ))}
           </tbody>
         </table>
-        {admins.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-gray-500">Adminlar yo'q</div>
+        {filtered.length === 0 && !isLoading && (
+          <div className="text-center py-12 text-gray-500">
+            {hasFilter ? "Filtr bo'yicha adminlar topilmadi" : "Adminlar yo'q"}
+          </div>
         )}
       </div>
 
@@ -106,4 +193,3 @@ const AdminsPage = () => {
 };
 
 export default AdminsPage;
-

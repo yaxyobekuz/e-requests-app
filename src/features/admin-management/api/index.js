@@ -2,6 +2,8 @@ import http from "@/shared/api/http";
 
 export const adminsAPI = {
   getAll: () => http.get("/api/admins"),
+  getTree: () => http.get("/api/admins/tree"),
+  getStats: () => http.get("/api/admins/stats"),
   getById: (id) => http.get(`/api/admins/${id}`),
   create: (data) => http.post("/api/admins", data),
   update: (id, data) => http.put(`/api/admins/${id}`, data),
