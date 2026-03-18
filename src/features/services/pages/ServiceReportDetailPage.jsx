@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Printer } from "lucide-react";
 
 import { serviceReportsAPI } from "@/shared/api";
+import { authAPI } from "@/features/auth/api";
 import { SERVICE_REPORT_STATUSES } from "@/shared/data/request-statuses";
 import { formatUzDate } from "@/shared/utils/formatDate";
 import {
@@ -28,6 +29,16 @@ const ServiceReportDetailPage = () => {
   const handlePrint = () => {
     window.print();
   };
+
+  const { data: user = {} } = useQuery({
+    queryKey: ["auth", "me"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: () => authAPI.getMe().then((res) => res.data),
+  });
+
+  const canExecute =
+    user.role === "owner" ||
+    user.adminRole?.executionPermissions?.services !== false;
 
   const { data: report, isLoading } = useQuery({
     queryKey: ["service-report-detail", id],
@@ -215,7 +226,7 @@ const ServiceReportDetailPage = () => {
       </div>
 
       {/* O'ng taraf: Holatni o'zgartirish (Faqat admin interfeysi) */}
-      <div className="w-full md:w-80 space-y-4 shrink-0 print:hidden">
+      {canExecute && <div className="w-full md:w-80 space-y-4 shrink-0 print:hidden">
         <div className="bg-white p-5 rounded-xl border sticky top-6">
           <h2 className="font-semibold mb-4">Arizani boshqarish</h2>
 
@@ -282,7 +293,7 @@ const ServiceReportDetailPage = () => {
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
