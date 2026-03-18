@@ -6,6 +6,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 import Button from "@/shared/components/ui/button/Button";
 
 import { requestsAPI, requestTypesAPI } from "@/shared/api";
+import { authAPI } from "@/features/auth/api";
 import { requestCategories } from "@/shared/data/request-categories";
 import { formatUzDate } from "@/shared/utils/formatDate";
 import { REQUEST_STATUSES } from "@/shared/data/request-statuses";
@@ -32,6 +33,16 @@ const RequestDetailPage = () => {
   const handlePrint = () => {
     window.print();
   };
+
+  const { data: user = {} } = useQuery({
+    queryKey: ["auth", "me"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: () => authAPI.getMe().then((res) => res.data),
+  });
+
+  const canExecute =
+    user.role === "owner" ||
+    user.adminRole?.executionPermissions?.requests !== false;
 
   const { data: request, isLoading } = useQuery({
     queryKey: ["request-detail", id],
@@ -232,7 +243,7 @@ const RequestDetailPage = () => {
       </div>
 
       {/* O'ng taraf: Holatni o'zgartirish (Faqat admin interfeysi) */}
-      <div className="w-full md:w-80 space-y-4 shrink-0 print:hidden">
+      {canExecute && <div className="w-full md:w-80 space-y-4 shrink-0 print:hidden">
         <div className="bg-white p-5 rounded-xl border sticky top-6">
           <h2 className="font-semibold mb-4">Murojaatni boshqarish</h2>
 
@@ -332,7 +343,7 @@ const RequestDetailPage = () => {
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
