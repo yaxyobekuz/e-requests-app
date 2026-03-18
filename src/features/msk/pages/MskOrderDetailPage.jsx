@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Printer } from "lucide-react";
 
 import { mskAPI } from "@/shared/api";
+import { authAPI } from "@/features/auth/api";
 import { MSK_ORDER_STATUSES } from "@/shared/data/request-statuses";
 import { formatUzDate } from "@/shared/utils/formatDate";
 import {
@@ -41,6 +42,16 @@ const MskOrderDetailPage = () => {
   const handlePrint = () => {
     window.print();
   };
+
+  const { data: user = {} } = useQuery({
+    queryKey: ["auth", "me"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: () => authAPI.getMe().then((res) => res.data),
+  });
+
+  const canExecute =
+    user.role === "owner" ||
+    user.adminRole?.executionPermissions?.msk !== false;
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["msk-order-detail", id],
@@ -219,7 +230,7 @@ const MskOrderDetailPage = () => {
       </div>
 
       {/* O'ng taraf: Holatni o'zgartirish (Faqat admin interfeysi) */}
-      <div className="w-full md:w-80 space-y-4 shrink-0 print:hidden">
+      {canExecute && <div className="w-full md:w-80 space-y-4 shrink-0 print:hidden">
         <div className="bg-white p-5 rounded-xl border sticky top-6">
           <h2 className="font-semibold mb-4">Buyurtmani boshqarish</h2>
 
@@ -281,7 +292,7 @@ const MskOrderDetailPage = () => {
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
