@@ -85,27 +85,6 @@ const Sidebar = () => {
     },
     { isDivider: true, show: true },
     { to: "/admins", label: "Adminlar", icon: Users, show: canManageAdmins },
-    { to: "/admin-roles", label: "Lavozimlar", icon: Briefcase, show: isOwner },
-    { to: "/services", label: "Servislar", icon: Settings, show: isOwner },
-    {
-      to: "/request-types",
-      label: "Murojaat turlari",
-      icon: Tags,
-      show: isOwner,
-    },
-    {
-      to: "/msk/categories",
-      label: "MSK kategoriyalar",
-      icon: Wrench,
-      show: isOwner,
-    },
-    { to: "/regions", label: "Hududlar", icon: MapPin, show: isOwner },
-    {
-      to: "/settings",
-      label: "Sozlamalar",
-      icon: SlidersHorizontal,
-      show: isOwner,
-    },
   ];
 
   return (
