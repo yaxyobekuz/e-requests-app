@@ -2,6 +2,7 @@
 import LoginPage from "@/features/auth/pages/LoginPage";
 import MskOrdersPage from "@/features/msk/pages/MskOrdersPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
+import StatisticsPage from "@/features/statistics/pages/StatisticsPage";
 import AdminsPage from "@/features/admin-management/pages/AdminsPage";
 import MskOrderDetailPage from "@/features/msk/pages/MskOrderDetailPage";
 import RequestsListPage from "@/features/requests/pages/RequestsListPage";
@@ -41,6 +42,7 @@ const Routes = () => {
       <Route element={<AuthGuard />}>
         <Route element={<AdminLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/statistics" element={<StatisticsPage />} />
           <Route path="/requests" element={<RequestsListPage />} />
           <Route path="/requests/:id" element={<RequestDetailPage />} />
           <Route path="/service-reports" element={<ServiceReportsPage />} />
