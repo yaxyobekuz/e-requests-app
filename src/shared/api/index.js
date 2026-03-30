@@ -7,3 +7,5 @@ export { adminRolesAPI } from "@/features/admin-roles/api";
 export { adminsAPI } from "@/features/admin-management/api";
 export { requestTypesAPI } from "@/features/request-types/api";
 export { servicesAPI, serviceReportsAPI } from "@/features/services/api";
+export { statsAPI } from "@/features/statistics/api";
+export { productsAPI } from "@/features/products/api";
