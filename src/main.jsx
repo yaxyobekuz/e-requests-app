@@ -1,4 +1,5 @@
 // Styles
+import "./styles/maps.css";
 import "./styles/index.css";
 
 // Toaster

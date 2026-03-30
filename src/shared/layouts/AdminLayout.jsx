@@ -9,6 +9,7 @@ import {
   UserCircle,
   FolderKanban,
   AlertTriangle,
+  BarChart3,
   LayoutDashboard,
   SlidersHorizontal,
 } from "lucide-react";
@@ -64,6 +65,7 @@ const Sidebar = () => {
 
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
+    { to: "/statistics", label: "Statistika", icon: BarChart3, show: true },
     { isDivider: true, show: true },
     {
       to: "/requests",
