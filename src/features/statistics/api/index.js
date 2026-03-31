@@ -78,6 +78,14 @@ export const statsAPI = {
     http.get(`/api/stats/users/by-district/${regionId}`, { params }),
 
   /**
+   * Foydalanuvchilar va xonadonlar demografik statistikasi hududlar bo'yicha.
+   * @param {{ regionId?: string, districtId?: string, neighborhoodId?: string }} params
+   * @returns {Promise<{ summary: object, byLevel: Array }>}
+   */
+  getUserDemographics: (params) =>
+    http.get("/api/stats/users/demographics", { params }),
+
+  /**
    * Hosil statistikasi — mahsulot, nav va hudud bo'yicha o'rtacha kg/sotix.
    * @param {{ productId?: string, varietyId?: string, regionId?: string, year?: number }} params
    * @returns {Promise}
