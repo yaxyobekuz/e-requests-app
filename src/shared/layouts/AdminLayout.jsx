@@ -3,10 +3,12 @@ import {
   Users,
   Wrench,
   MapPin,
+  PieChart,
   Settings,
   FileText,
   Briefcase,
   UserCircle,
+  UserRound,
   FolderKanban,
   AlertTriangle,
   BarChart3,
@@ -66,6 +68,18 @@ const Sidebar = () => {
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
     { to: "/statistics", label: "Statistika", icon: BarChart3, show: true },
+    {
+      to: "/users",
+      label: "Foydalanuvchilar",
+      icon: UserRound,
+      show: true,
+    },
+    {
+      to: "/users-stats",
+      label: "Aholi statistikasi",
+      icon: PieChart,
+      show: true,
+    },
     { isDivider: true, show: true },
     {
       to: "/requests",

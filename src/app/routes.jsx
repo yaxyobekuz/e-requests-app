@@ -19,6 +19,8 @@ import ProfilePage from "@/features/profile/pages/ProfilePage";
 import ProfileInfoTab from "@/features/profile/pages/tabs/ProfileInfoTab";
 import ProfilePermissionsTab from "@/features/profile/pages/tabs/ProfilePermissionsTab";
 import ProfilePasswordTab from "@/features/profile/pages/tabs/ProfilePasswordTab";
+import UserStatsPage from "@/features/users/pages/UserStatsPage";
+import UsersPage from "@/features/users/pages/UsersPage";
 
 // Guards
 import AuthGuard from "@/shared/components/guards/AuthGuard";
@@ -43,6 +45,8 @@ const Routes = () => {
         <Route element={<AdminLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/statistics" element={<StatisticsPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/users-stats" element={<UserStatsPage />} />
           <Route path="/requests" element={<RequestsListPage />} />
           <Route path="/requests/:id" element={<RequestDetailPage />} />
           <Route path="/service-reports" element={<ServiceReportsPage />} />
