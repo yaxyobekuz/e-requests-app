@@ -1,7 +1,9 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { LogOut } from "lucide-react";
 import { profileAPI } from "../api";
 import { PROFILE_TABS } from "../data/profile.data";
+import Button from "@/shared/components/ui/button/Button";
 
 /**
  * Profil sahifasi — layout (header + tab navigatsiya + Outlet).
@@ -9,6 +11,14 @@ import { PROFILE_TABS } from "../data/profile.data";
  * @returns {JSX.Element}
  */
 const ProfilePage = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
+    navigate("/login");
+  };
+
   const { data: user, isLoading } = useQuery({
     queryKey: ["profile", "me"],
     queryFn: () => profileAPI.getMe().then((res) => res.data),
@@ -29,11 +39,21 @@ const ProfilePage = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Profil</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Shaxsiy ma'lumotlaringiz va ruxsatlaringiz
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Profil</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Shaxsiy ma'lumotlaringiz va ruxsatlaringiz
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={handleLogout}
+          className="text-red-600 border-red-200 hover:bg-red-50 gap-2 flex-shrink-0"
+        >
+          <LogOut className="w-4 h-4" />
+          Chiqish
+        </Button>
       </div>
 
       {/* Tabs */}
