@@ -62,37 +62,45 @@ const UserRegionTooltip = ({ active, payload, label }) => {
  * UsersRegionBreakdown — region → district → neighborhood drill-down
  * for user counts with active/inactive stacked bars and summary table.
  *
- * @param {{ filters: { period: string, regionId: string|null, districtId: string|null } }} props
+ * @param {{ filters: object, regionType?: string }} props
  * @returns {JSX.Element}
  */
-const UsersRegionBreakdown = ({ filters }) => {
+const UsersRegionBreakdown = ({ filters, regionType }) => {
+  const showRegionLevel = !regionType || regionType === "region";
+  const showDistrictLevel = showRegionLevel || regionType === "district";
+
   const [drillRegion, setDrillRegion] = useState(null);
   const [drillDistrict, setDrillDistrict] = useState(null);
 
-  // Level 1: All regions
+  // Level 1: All regions — faqat viloyat darajasi va owner uchun
   const { data: regions = [], isLoading: regionsLoading } = useQuery({
     queryKey: ["stats", "users-by-region", filters],
     queryFn: () => statsAPI.getUsersByRegion(filters).then((r) => r.data),
+    enabled: showRegionLevel,
     refetchInterval: 60_000,
   });
 
+  // Tuman admin uchun: drillRegion o'rniga filters.regionId ishlatiladi
+  const effectiveRegionId = drillRegion?._id || (!showRegionLevel ? filters.regionId : null);
+  const effectiveDistrictId = drillDistrict?._id || (!showDistrictLevel ? filters.districtId : null);
+
   // Level 2: Districts within selected region
   const { data: districts = [], isLoading: districtsLoading } = useQuery({
-    queryKey: ["stats", "users-by-district", drillRegion?._id, filters],
+    queryKey: ["stats", "users-by-district", effectiveRegionId, filters],
     queryFn: () =>
-      statsAPI.getUsersByDistrict(drillRegion._id, filters).then((r) => r.data),
-    enabled: !!drillRegion,
+      statsAPI.getUsersByDistrict(effectiveRegionId, filters).then((r) => r.data),
+    enabled: !!effectiveRegionId,
     refetchInterval: 60_000,
   });
 
   // Level 3: Neighborhoods within selected district
   const { data: neighborhoods = [], isLoading: neighborhoodsLoading } = useQuery({
-    queryKey: ["stats", "users-by-neighborhood", drillRegion?._id, drillDistrict?._id, filters],
+    queryKey: ["stats", "users-by-neighborhood", effectiveRegionId, effectiveDistrictId, filters],
     queryFn: () =>
       statsAPI
-        .getUsersByDistrict(drillRegion._id, { ...filters, districtId: drillDistrict._id })
+        .getUsersByDistrict(effectiveRegionId, { ...filters, districtId: effectiveDistrictId })
         .then((r) => r.data),
-    enabled: !!drillRegion && !!drillDistrict,
+    enabled: !!effectiveRegionId && !!effectiveDistrictId,
     refetchInterval: 60_000,
   });
 
@@ -102,15 +110,17 @@ const UsersRegionBreakdown = ({ filters }) => {
   let title;
   let levelLabel;
 
-  if (drillDistrict) {
+  if (effectiveDistrictId) {
     currentData = neighborhoods;
     isLoading = neighborhoodsLoading;
-    title = `${drillRegion.name} → ${drillDistrict.name}`;
+    title = drillRegion && drillDistrict
+      ? `${drillRegion.name} → ${drillDistrict.name}`
+      : "Mahallalar bo'yicha foydalanuvchilar";
     levelLabel = "Mahalla";
-  } else if (drillRegion) {
+  } else if (effectiveRegionId) {
     currentData = districts;
     isLoading = districtsLoading;
-    title = drillRegion.name;
+    title = drillRegion ? drillRegion.name : "Tumanlar bo'yicha foydalanuvchilar";
     levelLabel = "Tuman";
   } else {
     currentData = regions;
@@ -120,13 +130,13 @@ const UsersRegionBreakdown = ({ filters }) => {
   }
 
   const handleBarClick = (entry) => {
-    if (drillDistrict) return; // no further drill-down
+    if (effectiveDistrictId) return; // no further drill-down from neighborhoods
     const item = currentData.find((d) => d.name === entry.name);
     if (!item) return;
 
-    if (!drillRegion) {
+    if (!effectiveRegionId) {
       setDrillRegion(item);
-    } else {
+    } else if (!effectiveDistrictId) {
       setDrillDistrict(item);
     }
   };
@@ -134,10 +144,12 @@ const UsersRegionBreakdown = ({ filters }) => {
   const handleBack = () => {
     if (drillDistrict) {
       setDrillDistrict(null);
-    } else {
+    } else if (drillRegion && showRegionLevel) {
       setDrillRegion(null);
     }
   };
+
+  const canGoBack = drillDistrict || (drillRegion && showRegionLevel);
 
   if (isLoading) {
     return (
@@ -152,7 +164,7 @@ const UsersRegionBreakdown = ({ filters }) => {
     return (
       <Card>
         <div className="flex items-center gap-2 mb-4">
-          {(drillRegion || drillDistrict) && (
+          {canGoBack && (
             <button
               onClick={handleBack}
               className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
@@ -179,14 +191,14 @@ const UsersRegionBreakdown = ({ filters }) => {
     }));
 
   const chartHeight = Math.max(320, chartData.length * 36 + 60);
-  const canDrill = !drillDistrict;
+  const canDrill = !effectiveDistrictId;
 
   return (
     <div className="space-y-4">
       <Card className="space-y-4">
         {/* Header with back button */}
         <div className="flex items-center gap-2">
-          {(drillRegion || drillDistrict) && (
+          {canGoBack && (
             <button
               onClick={handleBack}
               className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"

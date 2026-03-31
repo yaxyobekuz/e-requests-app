@@ -65,13 +65,21 @@ const RegionTooltip = ({ active, payload, label }) => {
   );
 };
 
-const RegionBreakdown = ({ filters }) => {
+/**
+ * @param {{ filters: object, regionType?: string }} props
+ */
+const RegionBreakdown = ({ filters, regionType }) => {
+  // Admin darajasi: "region" yoki null (owner) → viloyatlarni ko'rsatish
+  // "district" → faqat tuman + mahalla, "neighborhood"/"street" → faqat mahalla
+  const showRegionLevel = !regionType || regionType === "region";
+  const showDistrictLevel = showRegionLevel || regionType === "district";
   const [sortBy, setSortBy] = useState("total");
   const [moduleFilter, setModuleFilter] = useState("");
 
   const { data: regions = [], isLoading } = useQuery({
     queryKey: ["stats", "by-region", filters],
     queryFn: () => statsAPI.getByRegion(filters).then((r) => r.data),
+    enabled: showRegionLevel,
     refetchInterval: 60_000,
   });
 
@@ -227,7 +235,14 @@ const RegionBreakdown = ({ filters }) => {
     </div>
   );
 
-  if (isLoading) {
+  // Loading state: tegishli daraja uchun
+  const primaryLoading = showRegionLevel
+    ? isLoading
+    : showDistrictLevel
+      ? districtsLoading
+      : neighborhoodsLoading;
+
+  if (primaryLoading) {
     return (
       <Card>
         <div className="h-4 w-40 bg-gray-200 rounded animate-pulse mb-4" />
@@ -236,7 +251,14 @@ const RegionBreakdown = ({ filters }) => {
     );
   }
 
-  if (regions.length === 0) {
+  // Bo'sh holat: tegishli darajada ma'lumot yo'q
+  const primaryData = showRegionLevel
+    ? regions
+    : showDistrictLevel
+      ? districts
+      : neighborhoods;
+
+  if (primaryData.length === 0) {
     return (
       <Card>
         <p className="text-sm text-gray-400 text-center py-16">
@@ -275,18 +297,21 @@ const RegionBreakdown = ({ filters }) => {
         </select>
       </div>
 
-      {/* Region chart */}
-      <Card title="Viloyatlar bo'yicha taqqoslama" className="space-y-4">
-        {renderChart(chartData, moduleKeys)}
-      </Card>
+      {/* Region chart — faqat viloyat darajasidagi adminlar va owner uchun */}
+      {showRegionLevel && (
+        <>
+          <Card title="Viloyatlar bo'yicha taqqoslama" className="space-y-4">
+            {renderChart(chartData, moduleKeys)}
+          </Card>
 
-      {/* Region table */}
-      <Card title="Batafsil jadval" className="space-y-4">
-        {renderTable(chartData, "Viloyat")}
-      </Card>
+          <Card title="Batafsil jadval" className="space-y-4">
+            {renderTable(chartData, "Viloyat")}
+          </Card>
+        </>
+      )}
 
-      {/* District breakdown (appears when a region is selected on the map) */}
-      {filters.regionId && (
+      {/* District breakdown */}
+      {(showDistrictLevel && filters.regionId) && (
         <>
           <Card title="Tumanlar bo'yicha taqqoslama" className="space-y-4">
             {districtsLoading ? (
