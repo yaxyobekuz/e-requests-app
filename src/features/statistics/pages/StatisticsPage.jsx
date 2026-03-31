@@ -20,7 +20,6 @@ import HarvestStats from "../components/HarvestStats";
 import StatsOverview from "../components/StatsOverview";
 import RequestsStats from "../components/RequestsStats";
 import ServicesStats from "../components/ServicesStats";
-import RegionBreakdown from "../components/RegionBreakdown";
 import UsersStats from "../components/UsersStats";
 import UsersRegionBreakdown from "../components/UsersRegionBreakdown";
 import RegionDistrictPicker from "@/shared/components/ui/RegionDistrictPicker";
@@ -35,7 +34,6 @@ const ALL_TABS = [
   { key: "services", label: "Xizmat arizalari", module: "services" },
   { key: "msk", label: "MSK buyurtmalar", module: "msk" },
   { key: "users", label: "Foydalanuvchilar", module: null },
-  { key: "regions", label: "Hududlar", module: null },
   { key: "tomorqa", label: "Tomorqa", module: null },
 ];
 
@@ -271,10 +269,9 @@ const StatisticsPage = () => {
           {activeTab === "users" && (
             <>
               <UsersStats filters={filters} />
-              <UsersRegionBreakdown filters={filters} />
+              <UsersRegionBreakdown filters={filters} regionType={regionType} />
             </>
           )}
-          {activeTab === "regions" && <RegionBreakdown filters={filters} />}
           {activeTab === "tomorqa" && <HarvestStats filters={filters} />}
         </div>
       </div>
